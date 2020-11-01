@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from django.conf import settings as django_settings
 from django.utils.translation import ugettext_lazy as _
-from django.test.signals import setting_changed
+# from django.test.signals import setting_changed
 
 from mapwidgets.constants import TIMEZONE_COORDINATES
 
@@ -121,4 +121,4 @@ def reload_widget_settings(*args, **kwargs):
     if setting == 'MAP_WIDGETS' and value:
         mw_settings = MapWidgetSettings(None, DEFAULTS)
 
-setting_changed.connect(reload_widget_settings)
+# setting_changed.connect(reload_widget_settings)
