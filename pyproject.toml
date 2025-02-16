@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "demo"
-version = "1.0.0"
+name = "mapwidgets"
+version = "0.5.1"
 description = ""
 authors = ["Erdem Ozkol <github@erdemozkol.com>"]
 readme = "README.md"
