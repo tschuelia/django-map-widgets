@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from django.conf import settings as django_settings
 from django.utils.translation import ugettext_lazy as _
 # from django.test.signals import setting_changed
@@ -11,9 +9,31 @@ DEFAULTS = {
     "GooglePointFieldWidget": (
         ("mapCenterLocationName", None),
         ("mapCenterLocation", TIMEZONE_COORDINATES.get(getattr(django_settings, "TIME_ZONE", "UTC"))),
-        ("zoom", 6),
+        ("zoom", 12),
+        ("scrollWheel", False),
         ("GooglePlaceAutocompleteOptions", {}),
-        ("markerFitZoom", 15),
+        ("markerFitZoom", 14),
+        ("streetViewControl", True),
+    ),
+
+    "MapboxPointFieldWidget": (
+        ("access_token", ""),
+        ("markerFitZoom", 14),
+        ("showZoomNavigation", True),
+        ("mapOptions", {
+            "zoom": 12,
+            "style": "mapbox://styles/mapbox/streets-v11",
+            "scrollZoom": False,
+            "animate": False,
+            "center": TIMEZONE_COORDINATES.get(getattr(django_settings, "TIME_ZONE", "UTC")),
+        }),
+        ("geocoderOptions", {
+            "zoom": 6,
+            "flyTo": False,
+            "style": "mapbox://styles/mapbox/streets-v11",
+            "reverseGeocode": True,
+            "marker": False,
+        })
     ),
 
     "GoogleStaticMapWidget": (
@@ -49,9 +69,12 @@ DEFAULTS = {
         ("region", "")
     ),
     "LANGUAGE": "en",
+    "LIBRARIES": "places",
+    "srid": 4326,
     "MINIFED": not django_settings.DEBUG,
     "GOOGLE_MAP_API_SIGNATURE": "",
     "GOOGLE_MAP_API_KEY": "",
+    "MAPBOX_API_KEY": "",
 }
 
 
@@ -81,36 +104,42 @@ class MapWidgetSettings(object):
 
         try:
             # Check if present attr in user settings
-            val = self.app_settings[attr]
+            settings = self.app_settings[attr]
 
             # Merge app tuple settings with defaults
-            if isinstance(val, tuple):
+            if isinstance(settings, tuple):
                 try:
-                    app_bundle = OrderedDict(val)
-                    default_bundle = OrderedDict(self.defaults[attr])
-                    default_bundle.update(app_bundle)
-                    val = default_bundle
+                    # support backwards compatibility for old settings format
+                    settings = dict(settings)
                 except ValueError:
                     raise ValueError(_("Invalid %s settings value. Please check the settings documentation http://django-map-widgets.readthedocs.io/en/latest/widgets/settings.html" % attr))
 
             # Merge app dict settings with defaults
-            if isinstance(val, dict):
-                default_bundle = OrderedDict(self.defaults[attr])
-                default_bundle.update(val)
-                val = default_bundle
+            if type(settings) is dict:
+                django_settings = dict(self.defaults[attr])
+                for key, value in settings.items():
+                    # merge nested settings with defaults if it is dictionary
+                    if type(value) is dict:
+                        nested_setting = django_settings[key]
+                        for k, v in value.items():
+                            nested_setting[k] = v
+                        value = nested_setting
+                    django_settings[key] = value
+                settings = django_settings
 
         except KeyError:
             # Fall back to defaults
-            val = self.defaults[attr]
-            if isinstance(val, tuple):
+            settings = self.defaults[attr]
+            if isinstance(settings, tuple):
                 try:
-                    val = OrderedDict(val)
+                    settings = dict(settings)
                 except ValueError:
                     raise ValueError(_("Invalid %s settings value. Please check the settings documentation http://django-map-widgets.readthedocs.io/en/latest/widgets/settings.html" % attr))
 
         # Cache the result
-        setattr(self, attr, val)
-        return val
+        setattr(self, attr, settings)
+        return settings
+
 
 mw_settings = MapWidgetSettings(None, DEFAULTS)
 

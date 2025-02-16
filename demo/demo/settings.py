@@ -18,8 +18,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SITE_PATH = os.path.abspath(os.path.dirname(__file__))
 PROJECT_PATH = os.path.normpath(os.path.join(SITE_PATH, '..', '..'))
-if PROJECT_PATH not in sys.path:
-    sys.path.insert(0, PROJECT_PATH)
+# if PROJECT_PATH not in sys.path:
+#     sys.path.insert(0, PROJECT_PATH)
 
 
 # Quick-start development settings - unsuitable for production
@@ -59,9 +59,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
 ROOT_URLCONF = 'demo.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -130,24 +133,30 @@ USE_L10N = True
 
 USE_TZ = True
 
+LOCALE_PATHS = (
+    "/django-map-widgets/mapwidgets/locale",
+)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATIC_URL = '/static/'
-GOOGLE_MAP_API_KEY = "AIzaSyBwRaz6Qcmyquj2GG5g4RChfBecOg641Qg"
+GOOGLE_MAP_API_KEY = os.getenv('GOOGLE_MAP_API_KEY', None)
+MAPBOX_API_KEY = os.getenv('MAPBOX_API_KEY', None)
 MAP_WIDGETS = {
     "GooglePointFieldWidget": (
         ("zoom", 15),
         ("mapCenterLocation", [51.5073509, -0.12775829999998223]),
         ("markerFitZoom", 11),
-        ("GooglePlaceAutocompleteOptions", {'componentRestrictions': {'country': 'uk'}})
+        ("GooglePlaceAutocompleteOptions", {'componentRestrictions': {'country': 'uk'}}),
+        ("streetViewControl", False),
+        ("scrollWheel", True)
     ),
-    "GOOGLE_MAP_API_KEY": GOOGLE_MAP_API_KEY,
+    "MapboxPointFieldWidget": {
+        "access_token": MAPBOX_API_KEY,
+        "mapOptions": {
+            "zoom": 10,
+            "center": (51.515618, -0.091998)
+        }
+    },
+    "GOOGLE_MAP_API_KEY": GOOGLE_MAP_API_KEY
 }
-
-
-try:
-    from settings_local import *
-except ImportError:
-    pass
